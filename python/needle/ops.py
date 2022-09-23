@@ -131,7 +131,9 @@ class Transpose(TensorOp):
 
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        return array_api.transpose(a, self.axes)
+        if self.axes:
+            return array_api.swapaxes(a, self.axes[0], self.axes[1])
+        return array_api.swapaxes(a, len(a.shape) - 2, len(a.shape) - 1)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
