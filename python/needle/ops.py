@@ -98,7 +98,8 @@ class EWiseDiv(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_1, input_2 = node.inputs
+        return out_grad / input_2, -1 * out_grad * input_1 / input_2 ** 2
         ### END YOUR SOLUTION
 
 
@@ -117,7 +118,7 @@ class DivScalar(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return out_grad / self.scalar
         ### END YOUR SOLUTION
 
 
@@ -193,7 +194,10 @@ class Summation(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_1 = node.inputs[0]
+        print(input_1.shape)
+        print(out_grad)
+        return out_grad * array_api.ones_like(input_1)
         ### END YOUR SOLUTION
 
 
@@ -209,7 +213,18 @@ class MatMul(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        # https://math.stackexchange.com/questions/1866757/not-understanding-derivative-of-a-matrix-matrix-product
+        input_1, input_2 = node.inputs
+        len1, len2 = len(input_1.shape), len(input_2.shape)
+        out1 = out_grad@array_api.transpose(input_2)
+        out2 = array_api.transpose(input_1)@out_grad
+        if len1 == len2:
+            return out1, out2
+        if len1 != 2:
+            out2 = summation(out2, (0, 1))
+        if len2 != 2:
+            out1 = summation(out1, (0, 1))
+        return out1, out2
         ### END YOUR SOLUTION
 
 
