@@ -412,7 +412,19 @@ def find_topo_sort(node_list: List[Value]) -> List[Value]:
     sort.
     """
     ### BEGIN YOUR SOLUTION
-    raise NotImplementedError()
+    topo = []
+    visited = set()
+    def build_top(v):
+        if v not in visited:
+            visited.add(v)
+            for prev in v.inputs:
+                build_top(prev)
+            topo.append(v)
+
+    for node in node_list:
+        build_top(node)
+    return topo
+
     ### END YOUR SOLUTION
 
 
