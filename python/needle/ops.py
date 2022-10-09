@@ -139,7 +139,14 @@ class Transpose(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_1 = node.inputs[0]
+        s_input_1, s_out_grad = list(input_1.shape), list(out_grad.shape)
+        axes = [i for i in range(len(s_input_1)) if s_input_1[i] != s_out_grad[i]]
+        assert len(axes) == 2
+        print('axes = {}'.format(axes))
+        print('outgrad, \n', out_grad.shape)
+        return transpose(out_grad, tuple(axes))
+        # return input_1
         ### END YOUR SOLUTION
 
 
@@ -158,7 +165,8 @@ class Reshape(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_1 = node.inputs[0]
+        return Tensor(array_api.reshape(out_grad.numpy(), input_1.shape))
         ### END YOUR SOLUTION
 
 
@@ -175,7 +183,13 @@ class BroadcastTo(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_1 = node.inputs[0]
+        s_input_1, s_out_grad = list(input_1.shape), list(out_grad.shape)
+        if len(s_input_1) != len(s_out_grad):
+            s_input_1 = [1] * (len(s_out_grad) - len(s_input_1)) + s_input_1[:]        
+        axes = [i for i in range(len(s_input_1)) if s_input_1[i] != s_out_grad[i]]
+
+        return summation(out_grad, tuple(axes)).reshape(input_1.shape)
         ### END YOUR SOLUTION
 
 
@@ -195,9 +209,7 @@ class Summation(TensorOp):
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         input_1 = node.inputs[0]
-        print(input_1.shape)
-        print(out_grad)
-        return out_grad * array_api.ones_like(input_1)
+        return Tensor(array_api.ones(input_1.shape))
         ### END YOUR SOLUTION
 
 
@@ -218,12 +230,11 @@ class MatMul(TensorOp):
         len1, len2 = len(input_1.shape), len(input_2.shape)
         out1 = out_grad@array_api.transpose(input_2)
         out2 = array_api.transpose(input_1)@out_grad
-        if len1 == len2:
-            return out1, out2
-        if len1 != 2:
-            out2 = summation(out2, (0, 1))
-        if len2 != 2:
-            out1 = summation(out1, (0, 1))
+        len_out_grad = len(out_grad.shape)
+        if len2 != len_out_grad:
+            out2 = summation(out2, tuple([i for i in range(len_out_grad - len2)]))
+        if len1 != len_out_grad:
+            out1 = summation(out1, tuple([i for i in range(len_out_grad - len1)]))
         return out1, out2
         ### END YOUR SOLUTION
 
@@ -240,7 +251,8 @@ class Negate(TensorOp):
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_1 = node.inputs[0]
+        return out_grad * -1 * array_api.ones(input_1.shape)
         ### END YOUR SOLUTION
 
 
