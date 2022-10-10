@@ -398,20 +398,20 @@ def compute_gradient_of_variables(output_tensor, out_grad):
     # Traverse graph in reverse topological order given the output_node that we are taking gradient wrt.
     reverse_topo_order = list(reversed(find_topo_sort([output_tensor])))
 
-    print(reverse_topo_order)
     ### BEGIN YOUR SOLUTION
     for node in reverse_topo_order:
-        sum_for_node = sum(node_to_output_grads_list[node])
-        for idx, prev in enumerate(node.inputs):
-            grad_from_node_prev = node.op.gradient_as_tuple(sum_for_node, node)[idx]
-            prev_to_node = sum_for_node * (grad_from_node_prev if grad_from_node_prev else 0)
-            if prev not in node_to_output_grads_list:
-                node_to_output_grads_list[prev] = []
-            if prev_to_node not in node_to_output_grads_list[prev]:
-                node_to_output_grads_list[prev].append(prev_to_node)
-    for k, v in node_to_output_grads_list.items():
-        k.grad = sum(v)
-    return node_to_output_grads_list
+        # get list of grad contributions
+        output_grads_list = node_to_output_grads_list[node]
+        # compute grad of current node w.r.t. output node
+        node.grad = sum(output_grads_list)
+        # propagate grad to inputs
+        if not node.is_leaf():
+            for in_node, grad in zip(node.inputs,
+                                     node.op.gradient_as_tuple(node.grad, node)):
+                if in_node not in node_to_output_grads_list:
+                    node_to_output_grads_list[in_node] = [grad]
+                else:
+                    node_to_output_grads_list[in_node].append(grad)
     ### END YOUR SOLUTION
 
 
