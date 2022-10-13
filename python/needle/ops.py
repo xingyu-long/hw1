@@ -146,8 +146,7 @@ class Transpose(TensorOp):
         print('axes = {}'.format(axes))
         print('outgrad, \n', out_grad.shape)
         return transpose(out_grad, tuple(axes))
-        # return input_1
-        ### END YOUR SOLUTION
+        ## END YOUR SOLUTION
 
 
 def transpose(a, axes=None):
@@ -166,7 +165,7 @@ class Reshape(TensorOp):
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
         input_1 = node.inputs[0]
-        return Tensor(array_api.reshape(out_grad.numpy(), input_1.shape))
+        return reshape(out_grad.numpy(), input_1.shape)
         ### END YOUR SOLUTION
 
 
@@ -206,12 +205,25 @@ class Summation(TensorOp):
         return array_api.sum(a, self.axes)
         ### END YOUR SOLUTION
 
+    # def gradient(self, out_grad, node):
+    #     ### BEGIN YOUR SOLUTION
+    #     input_1 = node.inputs[0]
+    #     return Tensor(array_api.ones(input_1.shape))
+    #     ### END YOUR SOLUTION
+
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        input_1 = node.inputs[0]
-        return Tensor(array_api.ones(input_1.shape))
-        ### END YOUR SOLUTION
-
+        # Tensors are not subscriptable in needle.
+        # Call `reshape` alternatively to add axes.
+        axes_shape = list(node.inputs[0].shape)
+        if self.axes:
+            for i in self.axes:
+                axes_shape[i] = 1
+        else:
+            axes_shape = [1] * len(axes_shape)
+        return (broadcast_to(reshape(out_grad, axes_shape),
+                             node.inputs[0].shape),) # a deliberate tuple
+        ## END YOUR SOLUTION
 
 def summation(a, axes=None):
     return Summation(axes)(a)
@@ -254,7 +266,10 @@ class Negate(TensorOp):
         input_1 = node.inputs[0]
         return out_grad * -1 * array_api.ones(input_1.shape)
         ### END YOUR SOLUTION
-
+    # def gradient(self, out_grad, node):
+    #     ### BEGIN YOUR SOLUTION
+    #     return (negate(out_grad),) # a deliberate tuple
+        ### END YOUR SOLUTION
 
 def negate(a):
     return Negate()(a)
@@ -263,12 +278,13 @@ def negate(a):
 class Log(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.log(a)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        input_1 = node.inputs[0]
+        return out_grad / input_1
         ### END YOUR SOLUTION
 
 
@@ -279,14 +295,18 @@ def log(a):
 class Exp(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.exp(a)
         ### END YOUR SOLUTION
 
+    # def gradient(self, out_grad, node):
+    #     ### BEGIN YOUR SOLUTION
+    #     input_1 = node.inputs[0]
+    #     return out_grad * input_1
+    #     ### END YOUR SOLUTION
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
-
+        return (multiply(out_grad,
+                         exp(node.inputs[0])),) # a deliberate tuple
 
 def exp(a):
     return Exp()(a)
