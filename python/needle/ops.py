@@ -250,7 +250,6 @@ class MatMul(TensorOp):
         return out1, out2
         ### END YOUR SOLUTION
 
-
 def matmul(a, b):
     return MatMul()(a, b)
 
@@ -316,14 +315,13 @@ def exp(a):
 class ReLU(TensorOp):
     def compute(self, a):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
+        return array_api.maximum(0, a)
         ### END YOUR SOLUTION
 
     def gradient(self, out_grad, node):
         ### BEGIN YOUR SOLUTION
-        raise NotImplementedError()
-        ### END YOUR SOLUTION
-
+        grad = divide(relu(node.inputs[0]), node.inputs[0])
+        return (multiply(out_grad, grad),)
 
 def relu(a):
     return ReLU()(a)
